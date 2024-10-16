@@ -1,0 +1,8 @@
+datasets==2.15.0
+emoji==2.9.0
+huggingface_hub==0.19.4
+numpy==1.23.5
+pandas==1.5.3
+scikit_learn==1.2.2
+torch==2.2.0.dev20231120
+transformers==4.24.0
