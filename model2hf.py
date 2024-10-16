@@ -5,7 +5,7 @@ parser = ArgumentParser()
 parser.add_argument("--layer", dest = "layer")
 args = parser.parse_args()
 
-token = "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"
+token = "HF TOKEN"
 login(token)
 api = HfApi()
 
