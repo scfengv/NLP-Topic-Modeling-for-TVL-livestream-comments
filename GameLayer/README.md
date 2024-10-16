@@ -1,39 +1,4 @@
----
-license: mit
-datasets:
-- scfengv/TVL-game-layer-dataset
-language:
-- zh
-metrics:
-- accuracy
-base_model:
-- google-bert/bert-base-chinese
-pipeline_tag: text-classification
-tags:
-- multi-label
-
-model-index:
-  - name: scfengv/TVL_GameLayerClassifier
-    results:
-      - task:
-          type: multi-label text-classification
-        dataset:
-          name: scfengv/TVL-game-layer-dataset
-          type: scfengv/TVL-game-layer-dataset
-        metrics:
-          - name: Accuracy
-            type: Accuracy
-            value: 0.985764
-            
-          - name: F1 score (Micro)
-            type: F1 score (Micro)
-            value: 0.993132
-
-          - name: F1 score (Macro)
-            type: F1 score (Macro)
-            value: 0.993694
----
-# Model Card for Model ID
+# Model Card
 
 <!-- Provide a quick summary of what the model is/does. -->
 

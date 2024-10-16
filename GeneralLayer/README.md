@@ -1,38 +1,3 @@
----
-license: mit
-language:
-- zh
-metrics:
-- accuracy
-- f1 (macro)
-- f1 (micro)
-base_model:
-- google-bert/bert-base-chinese
-pipeline_tag: text-classification
-tags:
-- Multi-label Text Classification
-datasets:
-- scfengv/TVL-general-layer-dataset
-library_name: adapter-transformers
-model-index:
-- name: scfengv/TVL_GeneralLayerClassifier
-  results:
-  - task:
-      type: multi-label text-classification
-    dataset:
-      name: scfengv/TVL-general-layer-dataset
-      type: scfengv/TVL-general-layer-dataset
-    metrics:
-    - name: Accuracy
-      type: Accuracy
-      value: 0.952902
-    - name: F1 score (Micro)
-      type: F1 score (Micro)
-      value: 0.968717
-    - name: F1 score (Macro)
-      type: F1 score (Macro)
-      value: 0.970818
----
 # Model Card
 
 <!-- Provide a quick summary of what the model is/does. -->
