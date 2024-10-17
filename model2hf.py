@@ -12,10 +12,14 @@ api = HfApi()
 hf_username = "scfengv"
 
 if args.layer == "general":
-    dataset_name = "TVL_GeneralLayerClassifier"
+    layer = "GeneralLayer"
 elif args.layer == "game":
-    dataset_name = "TVL_GameLayerClassifier"
+    layer = "GameLayer"
+elif args.layer == "sentiment":
+    layer = "SentimentLayer"
 
-repo_url = api.create_repo(repo_id = f"{hf_username}/{dataset_name}", private = False, exist_ok = True)
-repo = Repository(local_dir = "GeneralLayer/best_model", clone_from = f"{hf_username}/{dataset_name}")
+model_name = f"TVL_{layer}Classifier"
+
+repo_url = api.create_repo(repo_id = f"{hf_username}/{model_name}", private = False, exist_ok = True)
+repo = Repository(local_dir = f"{layer}/best_model", clone_from = f"{hf_username}/{model_name}")
 repo.push_to_hub()

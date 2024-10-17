@@ -26,7 +26,7 @@ class Create_Data():
 
     def Raw_df(self):
         df_ = self.df.copy()
-        self.df_raw = Preprocess(df_)
+        self.df_raw = NotEmpty(Preprocess(df_))
         self.df_raw.to_csv("data/RawData.csv", index = False)
         return self
 

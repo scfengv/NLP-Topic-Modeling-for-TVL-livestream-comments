@@ -21,14 +21,18 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if args.layer == "general":
-        ds = load_dataset("scfengv/TVL-general-layer-dataset")
+        ds = load_dataset(f"scfengv/TVL-{args.layer}-layer-dataset")
         ds = ds.map(lambda datasets: {"target": [datasets[col] for col in params["General_col"]]},
                     remove_columns = [col for col in ds["train"].column_names if col not in ["text", "target"]])
-
+        
     elif args.layer == "game":
-        ds = load_dataset("scfengv/TVL-game-layer-dataset")
+        ds = load_dataset(f"scfengv/TVL-{args.layer}-layer-dataset")
         ds = ds.map(lambda datasets: {"target": [datasets[col] for col in params["Game_col"]]},
                     remove_columns = [col for col in ds["train"].column_names if col not in ["text", "target"]])
+        
+    elif args.layer == "sentiment":
+        ds = load_dataset(f"scfengv/TVL-{args.layer}-layer-dataset")
+        ds = ds.rename_column("label", "target").remove_columns(["score"])
         
     tokenizer = BertTokenizer.from_pretrained(params["Tokenizer"])
 
@@ -55,11 +59,16 @@ def main():
     elif args.layer == "game":
         label2id = params["label2id_game"]
 
-    model = BertForSequenceClassification.from_pretrained(
-        params["Model"], num_labels = len(label2id),
-        problem_type = "multi_label_classification",
-        label2id = label2id
-    )
+    if args.layer != "sentiment":
+        model = BertForSequenceClassification.from_pretrained(
+            params["Model"], num_labels = len(label2id),
+            problem_type = "multi_label_classification",
+            label2id = label2id
+        )
+    else:
+        model =  BertForSequenceClassification.from_pretrained(
+            params["Model"]
+        )
     model.to(device)
 
     optimizer = torch.optim.Adam(params =  model.parameters(), lr = params["LEARNING_RATE"])
