@@ -23,16 +23,20 @@ def main():
     if args.layer == "general":
         ds = load_dataset(f"scfengv/TVL-{args.layer}-layer-dataset")
         ds = ds.map(lambda datasets: {"target": [datasets[col] for col in params["General_col"]]},
-                    remove_columns = [col for col in ds["train"].column_names if col not in ["text", "target"]])
+                    remove_columns = [col for col in ds["train"].column_names if col not in ["text", "target"]]
+        )
         
     elif args.layer == "game":
         ds = load_dataset(f"scfengv/TVL-{args.layer}-layer-dataset")
-        ds = ds.map(lambda datasets: {"target": [datasets[col] for col in params["Game_col"]]},
-                    remove_columns = [col for col in ds["train"].column_names if col not in ["text", "target"]])
+        ds = ds.map(
+            lambda datasets: {"target": [datasets[col] for col in params["Game_col"]]},
+            remove_columns = [col for col in ds["train"].column_names if col not in ["text", "target"]]
+        )
         
     elif args.layer == "sentiment":
+        label_mapping = {"positive": 1, "negative": 0}
         ds = load_dataset(f"scfengv/TVL-{args.layer}-layer-dataset")
-        ds = ds.rename_column("label", "target").remove_columns(["score"])
+        ds = ds.rename_column("label", "target").map(lambda x: {"target": label_mapping[x["target"]]}).remove_columns(["score"])
         
     tokenizer = BertTokenizer.from_pretrained(params["Tokenizer"])
 
@@ -60,14 +64,16 @@ def main():
         label2id = params["label2id_game"]
 
     if args.layer != "sentiment":
+        task = "multiclass"
         model = BertForSequenceClassification.from_pretrained(
             params["Model"], num_labels = len(label2id),
             problem_type = "multi_label_classification",
             label2id = label2id
         )
     else:
+        task = "binary"
         model =  BertForSequenceClassification.from_pretrained(
-            params["Model"]
+            params["Model"], problem_type = "text-classification"
         )
     model.to(device)
 
@@ -85,15 +91,15 @@ def main():
                                 training_loader, validation_loader, 
                                 model, optimizer, 
                                 checkpoint_path, best_model_path, 
-                                val_targets, val_outputs, tokenizer)
+                                val_targets, val_outputs, task, tokenizer)
     
-    val_preds = (np.array(val_outputs) > 0.5).astype(int)
-    accuracy = metrics.accuracy_score(val_targets, val_preds)
-    f1_score_micro = metrics.f1_score(val_targets, val_preds, average = "micro")
-    f1_score_macro = metrics.f1_score(val_targets, val_preds, average = "macro")
-    print(f"Accuracy Score = {accuracy}")
-    print(f"F1 Score (Micro) = {f1_score_micro}")
-    print(f"F1 Score (Macro) = {f1_score_macro}")
+    # val_preds = (np.array(val_outputs) > 0.5).astype(int)
+    # accuracy = metrics.accuracy_score(val_targets, val_preds)
+    # f1_score_micro = metrics.f1_score(val_targets, val_preds, average = "micro")
+    # f1_score_macro = metrics.f1_score(val_targets, val_preds, average = "macro")
+    # print(f"Accuracy Score = {accuracy}")
+    # print(f"F1 Score (Micro) = {f1_score_micro}")
+    # print(f"F1 Score (Macro) = {f1_score_macro}")
 
 if __name__ == "__main__":
     main()

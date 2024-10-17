@@ -15,16 +15,24 @@ api = HfApi()
 
 print("Reading file")
 if args.layer == "general":
-    df = pd.read_csv("data/GeneralLayer.csv", index_col = False)
+    df = pd.read_csv("data/GeneralLayer.csv", index_col = False, encoding = "utf-8")
 elif args.layer == "game":
-    df = pd.read_csv("data/GameLayer.csv", index_col = False)
+    df = pd.read_csv("data/GameLayer.csv", index_col = False, encoding = "utf-8")
 elif args.layer == "sentiment":
-    df = pd.read_json("data/PseudoLabelTrainingSet.json")
+    df = pd.read_json("data/PseudoLabelTrainingSet.json", encoding = "utf-8")
 
 print("Preprocessing")
+
 train_size = 0.8
-train_df = df.sample(frac = train_size, random_state = 200)
+if args.layer != "sentiment":
+    train_df = df.sample(frac = train_size, random_state = 200)
+
+else:
+    n = int(train_size * len(df[df["label"] == "negative"]))
+    train_df = PLTSNormalDistribution(df, n)
+
 valid_df = df.drop(train_df.index)
+
 RMEmoji_df = Remove_Emoji(df)
 Emoji2Desc_df = Emoji2Desc(df)
 RMPunc_df = Remove_Punc(df)

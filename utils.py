@@ -4,7 +4,8 @@ import json
 import torch
 import emoji
 import transformers
-
+import pandas as pd
+from scipy import stats
 from torch.utils.data import Dataset
 
 emoji_list = emoji.EMOJI_DATA
@@ -107,7 +108,10 @@ class BERTClass(torch.nn.Module):
         output = self.l3(output_2[:, 0, :])
         return output
     
-def loss_fn(outputs, targets):
+def loss_fn_binary(outputs, targets):
+    return torch.nn.CrossEntropyLoss()(outputs.logits, targets.long())
+
+def loss_fn_multi(outputs, targets):
     return torch.nn.BCEWithLogitsLoss()(outputs.logits, targets)
 
 def load_ckp(checkpoint_fpath, model, optimizer):
@@ -148,7 +152,7 @@ def save_ckp(state, is_best, checkpoint_path, best_model_path):
 
 def train_model(start_epochs,  n_epochs, valid_loss_min_input,
                 training_loader, validation_loader, model,
-                optimizer, checkpoint_path, best_model_path, val_targets, val_outputs, tokenizer, device = device):
+                optimizer, checkpoint_path, best_model_path, val_targets, val_outputs, task, tokenizer, device = device):
 
     valid_loss_min = valid_loss_min_input
 
@@ -167,7 +171,10 @@ def train_model(start_epochs,  n_epochs, valid_loss_min_input,
             outputs = model(ids, mask, token_type_ids)
 
             optimizer.zero_grad()
-            loss = loss_fn(outputs, targets)
+            if task == "multiclass":
+                loss = loss_fn_multi(outputs, targets)
+            elif task == "binary":
+                loss = loss_fn_binary(outputs, targets)
 
             loss.backward()
             optimizer.step()
@@ -183,7 +190,11 @@ def train_model(start_epochs,  n_epochs, valid_loss_min_input,
                 targets = data["targets"].to(device, dtype = torch.float)
                 outputs = model(ids, mask, token_type_ids)
 
-                loss = loss_fn(outputs, targets)
+                if task == "multiclass":
+                    loss = loss_fn_multi(outputs, targets)
+                elif task == "binary":
+                    loss = loss_fn_binary(outputs, targets)
+                    
                 valid_loss = valid_loss + ((1 / (batch_idx + 1)) * (loss.item() - valid_loss))
                 val_targets.extend(targets.cpu().detach().numpy().tolist())
                 val_outputs.extend(torch.sigmoid(outputs.logits).cpu().detach().numpy().tolist())
@@ -212,3 +223,19 @@ def train_model(start_epochs,  n_epochs, valid_loss_min_input,
         print(f"### Epoch {epoch}  End ###\n")
 
     return model
+
+def PLTSNormalDistribution(df, n_samples_per_label):
+    label_groups = [group for _, group in df.groupby('label')]
+    
+    def sample_normal(group, n):
+        z_scores = stats.zscore(group['score'])
+        
+        probs = stats.norm.pdf(z_scores)
+        probs /= probs.sum()
+        
+        return group.sample(n = n, weights = probs, replace = False)
+
+    samples = [sample_normal(group, n_samples_per_label) for group in label_groups]
+    result = pd.concat(samples).reset_index(drop = True)
+    
+    return result
